@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Authentication | Kimi-Win</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <style>
+    /* Disable text selection */
+    * {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --warning: #f8961e;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --white: #ffffff;
+      --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+        background: linear-gradient(
+  180deg,
+  #005530 0%,
+  #006844 10%,
+  #007a58 20%,
+  #008c6d 30%,
+  #009d82 40%,
+  #00ad97 50%,
+  #00bdac 60%,
+  #00cbc1 70%,
+  #00d9d6 80%,
+  #00e6eb 90%,
+  #000000 100%
+);
+      font-family: 'Poppins', sans-serif;
+      background-size: cover;
+      background-size: 100% 100%;
+      background-position: center;
+      display: flex;
+      padding:5px;
+      align-content: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .auth-container {
+      background: linear-gradient(
+  180deg,
+  #005530 0%,
+  #006844 10%,
+  #007a58 20%,
+  #008c6d 30%,
+  #009d82 40%,
+  #00ad97 50%,
+  #00bdac 60%,
+  #00cbc1 70%,
+  #00d9d6 80%,
+  #00e6eb 90%,
+  #000000 100%
+);      
+      background-size: 100% 100%;
+      width: 100%;
+      max-width: 100%;
+      min-height:90%;
+      overflow: hidden;
+      position: relative;
+      transition: var(--transition);
+      margin: 10px;
+    }
+
+    .auth-header {
+      background: linear-gradient(
+  180deg,
+  #12E193 0%,
+  #006844 10%,
+  #007a58 20%,
+  #008c6d 30%,
+  #009d82 40%,
+  #00ad97 50%,
+  #00bdac 60%,
+  #00cbc1 70%,
+  #00d9d6 80%,
+  #00e6eb 90%,
+  #12E193 100%
+);      background-size: 100% 100%;
+      color: var(--white);
+      padding: 0px;
+      text-align: center;
+      position: relative;
+      border-radius: 18px;
+      font-weight: 900;
+    }
+
+    .auth-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+      opacity: 0.8;
+    }
+
+    .auth-header h1 {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .auth-header p {
+      font-size: 14px;
+      opacity: 0.9;
+      position: relative;
+    }
+
+    .auth-logo {
+      width: 180px;
+      height: 160px;
+      background:url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhzVfVK6MniSTFmumCREM3TWCHnQPqyQzU3hzwGuxFWd0tva0jOoYT7FXMncrSXbhQEdAzVekxuFcSNQU-99doOO2azzRvZXjmF4NtYj8ofSCrszCkgwewTC8CMuCP_Zo4LhCTL1ARGCIaRZW03sEhEOjgEVsrU8YwXkp6eVx2Xd4ZMPA1oyt7c5RBJrGQ/s16000/1000100567.gif');
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      background-size: 101% 101%;
+      filter: drop-shadow(0 0 10px white) drop-shadow(0 0 50px rgba(0, 255, 255, 0.7));
+    }
+
+    .auth-logo img {
+      color: var(--primary);
+      font-size: 28px;
+      height: 155px;
+      width: 155px;
+    }
+
+    .auth-body {
+      padding: 30px;
+    }
+
+    .auth-tabs {
+        background: linear-gradient(
+  180deg,
+  #000000 0%,
+  #006844 10%,
+  #007a58 20%,
+  #008c6d 30%,
+  #009d82 40%,
+  #00ad97 50%,
+  #00bdac 60%,
+  #00cbc1 70%,
+  #00d9d6 80%,
+  #00e6eb 90%,
+  #000000 100%
+);
+border-radius:20px;
+background-size: 100% 100%;
+      display: flex;
+      margin-bottom: 20px;
+      justify-content: center;
+      border:2px solid #005530;
+    }
+
+    .auth-tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: 900;
+      color: white;
+      position: relative;
+      transition:none;
+    }
+
+    .auth-tab.active {
+        background: linear-gradient(
+  180deg,
+  #005530 0%,
+  #00ad97 10%,
+  #00ad97 20%,
+  #00ad97 30%,
+  #00ad97 40%,
+  #00ad97 50%,
+  #00ad97 60%,
+  #00ad97 70%,
+  #00ad97 80%,
+  #00ad97 90%,
+  #005530 100%
+);
+border:2px solid#005530;
+border-radius: 20px;
+background-size: 100% 100%;
+      color: #005530;
+      filter: drop-shadow(0 0 1px white) drop-shadow(0 0 0.5px rgba(0, 255, 255, 0.7));
+    }
+
+    .auth-tab.active::after {
+      content: '';
+      position: absolute;
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--dark);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px 12px 40px;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 800;
+      transition: var(--transition);
+      background: linear-gradient(
+  180deg,
+  #005530 0%,
+  #00ad97 10%,
+  #00ad97 20%,
+  #00ad97 30%,
+  #00ad97 40%,
+  #00ad97 50%,
+  #00ad97 60%,
+  #00ad97 70%,
+  #00ad97 80%,
+  #00ad97 90%,
+  #005530 100%
+);
+border:2px solid#005530;
+border-radius: 20px;
+background-size: 100% 100%;
+      color: #005530;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      outline: none;
+    }
+
+    .form-icon {
+      position: absolute;
+      left: 15px;
+      top: 38px;
+      color:orange;
+      font-size: 18px;
+      background: linear-gradient(
+  180deg,
+  #00ad97 0%,
+  #00ad97 10%,
+  #00ad97 20%,
+  #00ad97 30%,
+  #00ad97 40%,
+  #00ad97 50%,
+  #00ad97 60%,
+  #00ad97 70%,
+  #00ad97 80%,
+  #00ad97 90%,
+  #00ad97 100%
+);
+background-size: 100% 100%;
+      color: #005530;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      width: 100%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    }
+
+    .btn-primary {
+      background: linear-gradient(
+  180deg,
+  #005530 0%,
+  #00ad97 10%,
+  #00ad97 20%,
+  #00ad97 30%,
+  #00ad97 40%,
+  #00ad97 50%,
+  #00ad97 60%,
+  #00ad97 70%,
+  #00ad97 80%,
+  #00ad97 90%,
+  #005530 100%
+);
+border:2px solid#005530;
+border-radius: 20px;
+background-size: 100% 100%;
+      color: #005530;
+      box-shadow: inset 0 20px 40px rgba(255, 255, 255, 0.9);
+      font-size: 15px;
+      font-weight: 900;
+      border: 0.1px solid #fdbd01;
+      border-bottom: 1px solid #F88017;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 10px 20px rgba(255, 255, 255, 0.9);
+    }
+
+    .btn-google {
+      background: linear-gradient(
+  180deg,
+  #005530 0%,
+  #00ad97 10%,
+  #00ad97 20%,
+  #00ad97 30%,
+  #00ad97 40%,
+  #00ad97 50%,
+  #00ad97 60%,
+  #00ad97 70%,
+  #00ad97 80%,
+  #00ad97 90%,
+  #005530 100%
+);
+border:2px solid#005530;
+background-size: 100% 100%;
+      color: #005530;
+      margin-bottom: 15px;
+      box-shadow: inset 0 10px 20px rgba(255, 255, 255, 0.9);
+    }
+
+    .btn-google:hover {
+      background-color: #357ae8;
+      transform: translateY(-2px);
+      box-shadow: inset 0 10px 20px rgba(255, 255, 255, 0.8);
+    }
+
+    .btn-anonymous {
+      background: linear-gradient(
+  180deg,
+  #005530 0%,
+  #00ad97 10%,
+  #00ad97 20%,
+  #00ad97 30%,
+  #00ad97 40%,
+  #00ad97 50%,
+  #00ad97 60%,
+  #00ad97 70%,
+  #00ad97 80%,
+  #00ad97 90%,
+  #005530 100%
+);
+background-size: 100% 100%;
+      color: #005530;
+      font-weight: 900;
+      border: 1px solid #ddd;
+      box-shadow: inset 0 10px 20px rgba(255, 255, 255, 0.9);
+    }
+
+    .btn-anonymous:hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 10px 30px rgba(255, 255, 255, 0.9);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      color:#005530;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: #eee;
+      margin: 0 10px;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    .auth-footer a {
+      color:#005530;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    /* User Info Styles */
+    #userInfo {
+      display: none;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .user-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 20px;
+      font-size: 32px;
+    }
+
+    .user-email {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: var(--dark);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 1px;
+      background: url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEipgOY-Cw-VRJjAepn2qfsUfVBXmOLW43hwo2d-Te9CG9O7U6inSiYFr-7wWfOkpJG7mZk_W0yz6gDnDXy3EW9qkfI6lJ9Lo0d_Va5SzzWTPF2otmaIZLjILvWtrrDQofej8rcayaSfKjbTzU3XrAd5L4EYmWT5rqlWF5oMwYCZ7O6mn1bYdRCzRPDPqpI/s16000/1000100381.png');
+      background-size: 100% 100%;
+      color: #F3E8EA;
+      font-weight: 900;
+      font-size: 14px;
+      padding: 15px 25px;
+      border-radius: 0px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.0);
+      display: flex;
+      align-items: center;
+      z-index: 1000;
+      transform: translateY(-150%);
+      transition: transform 0.3s ease;
+      text-align: center;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast i {
+      margin-right: 10px;
+      color: #A55D35;
+      font-size: 20px;
+    }
+
+    .toast.success {
+      color: #77DD77;
+    }
+
+    .toast.error {
+      color: #A55D35;
+    }
+
+    .toast.warning {
+      color: var(--dark);
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: none;
+      width: 40px;
+      height: 40px;
+      margin: 0 auto;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Password Strength Meter */
+    .password-strength {
+      height: 5px;
+      background: #eee;
+      border-radius: 3px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+
+    .password-strength-fill {
+      height: 100%;
+      width: 0;
+      transition: width 0.3s ease;
+    }
+
+    /* Referral Popup */
+    .referral-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.99);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .referral-popup.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .referral-container {
+      background: url('https://i.pinimg.com/736x/5f/b1/56/5fb156a5b633b91fb999b9fa0c61f196.jpg');
+      border-radius: 16px;
+      padding: 25px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      background-size: 100% 100%;
+    }
+
+    .referral-popup.active .referral-container {
+      transform: translateY(0);
+    }
+
+    .referral-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .referral-header h3 {
+      color:#7D0552;
+      margin-bottom: 10px;
+      font-weight: 900;
+    }
+
+    .referral-header p {
+      color: #DC143C;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .referral-form {
+      margin-bottom: 20px;
+    }
+
+    .referral-form input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .referral-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .referral-buttons button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .referral-submit {
+      background: linear-gradient(
+  180deg,
+  #000000 0%,
+  #006844 10%,
+  #007a58 20%,
+  #008c6d 30%,
+  #009d82 40%,
+  #00ad97 50%,
+  #00bdac 60%,
+  #00cbc1 70%,
+  #00d9d6 80%,
+  #00e6eb 90%,
+  #000000 100%
+);
+      color: #00FF00;
+      border:none;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    .referral-skip {
+      background: white;
+      color: red;
+      border: 1px solid #ddd;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    /* Verification Modal */
+    .verification-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1002;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .verification-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .verification-container {
+      background: linear-gradient(
+  180deg,
+  #005530 0%,
+  #00ad97 10%,
+  #00ad97 20%,
+  #00ad97 30%,
+  #00ad97 40%,
+  #00ad97 50%,
+  #00ad97 60%,
+  #00ad97 70%,
+  #00ad97 80%,
+  #00ad97 90%,
+  #005530 100%
+);
+      border-radius: 16px;
+      padding: 30px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      text-align: center;
+      border: 2px solid #005530;
+    }
+
+    .verification-modal.active .verification-container {
+      transform: translateY(0);
+    }
+
+    .verification-icon {
+      font-size: 60px;
+      color: #4CAF50;
+      margin-bottom: 20px;
+    }
+
+    .verification-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #005530;
+    }
+
+    .verification-message {
+      font-size: 16px;
+      margin-bottom: 25px;
+      color: #005530;
+      line-height: 1.5;
+    }
+
+    .verification-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .verification-button {
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .verification-primary {
+      background: #005530;
+      color: white;
+      border: none;
+    }
+
+    .verification-secondary {
+      background: transparent;
+      color: #005530;
+      border: 1px solid #005530;
+    }
+
+    /* Password Reset Form */
+    .password-reset-form {
+      display: none;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .password-reset-form.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .password-reset-form h2 {
+      color: #005530;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    /* Download App Form */
+    .download-app-form {
+      display: none;
+      padding: 30px;
+    }
+
+    .download-app-form.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .download-app-form h2 {
+      color: #005530;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .download-app-stats {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .download-app-stat {
+      text-align: center;
+    }
+
+    .download-app-stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #005530;
+    }
+
+    .download-app-stat-label {
+      font-size: 12px;
+      color: #005530;
+    }
+
+    .download-app-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #005530;
+    }
+
+    /* Responsive */
+    @media (max-width: 576px) {
+      .auth-container {
+        border-radius: 12px;
+      }
+      
+      .auth-header {
+        padding: 20px;
+      }
+      
+      .auth-body {
+        padding: 20px;
+      }
+    }
+
+    /* Responsive Desktop Screen Design */
+    @media (min-width: 1004px) {
+      body {
+        background-size: cover;
+        background-position: center;
+        padding: 40px;
+      }
+
+      .auth-container {
+        max-width: 900px;
+        display: flex;
+        min-height: 600px;
+      }
+
+      .auth-header {
+        width: 45%;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 16px 0 0 16px;
+      }
+
+      .auth-logo {
+        width: 200px;
+        height: 200px;
+        margin-bottom: 30px;
+      }
+
+      .auth-logo img {
+        height: 195px;
+        width: 195px;
+      }
+
+      .auth-header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+      }
+
+      .auth-header p {
+        font-size: 16px;
+      }
+
+      .auth-body {
+        width: 55%;
+        padding: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .auth-tabs {
+        justify-content: center;
+        margin-bottom: 30px;
+      }
+
+      .auth-tab {
+        padding: 12px 25px;
+        font-size: 16px;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      .form-control {
+        padding: 14px 15px 14px 45px;
+        font-size: 15px;
+      }
+
+      .form-icon {
+        font-size: 18px;
+        top: 42px;
+      }
+
+      .btn {
+        padding: 14px 24px;
+        font-size: 15px;
+      }
+
+      .divider {
+        margin: 25px 0;
+        font-size: 14px;
+      }
+
+      .auth-footer {
+        font-size: 14px;
+        margin-top: 25px;
+      }
+
+      /* User Info Styles */
+      #userInfo {
+        padding: 50px;
+        width: 55%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .user-avatar {
+        width: 120px;
+        height: 120px;
+        font-size: 48px;
+        margin-bottom: 30px;
+      }
+
+      .user-email {
+        font-size: 18px;
+        margin-bottom: 30px;
+      }
+
+      /* Toast Notification */
+      .toast {
+        left: 50%;
+        transform: translateX(-50%) translateY(-150%);
+        max-width: 500px;
+        width: auto;
+        padding: 18px 30px;
+        font-size: 16px;
+      }
+
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .toast i {
+        font-size: 22px;
+      }
+    }
+
+    /* Large Desktop Screens */
+    @media (min-width: 1440px) {
+      .auth-container {
+        max-width: 1100px;
+        min-height: 650px;
+      }
+
+      .auth-header {
+        padding: 50px;
+      }
+
+      .auth-logo {
+        width: 220px;
+        height: 220px;
+      }
+
+      .auth-logo img {
+        height: 215px;
+        width: 215px;
+      }
+
+      .auth-header h1 {
+        font-size: 36px;
+      }
+
+      .auth-header p {
+        font-size: 17px;
+      }
+
+      .auth-body {
+        padding: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="auth-logo"></div>
+      <h1 id="pageTitle">Welcome Back!</h1>
+      <p id="pageSubtitle" style="color: black;">Please Sign in to access your account</p>
+    </div>
+
+    <div class="auth-body">
+      <!-- Default Auth Tabs (shown only in default mode) -->
+      <div class="auth-tabs" id="authTabs">
+        <div class="auth-tab active" onclick="showTab('login')">Sign In</div>
+        <div class="auth-tab" onclick="showTab('signup')">Sign Up</div>
+      </div>
+
+      <!-- Login Form -->
+      <div id="login" class="auth-form">
+        <button class="btn btn-google" onclick="googleLogin()">
+          <i class="fab fa-google"></i> Continue with Google
+        </button>
+        
+        <div class="divider">OR</div>
+        
+        <div class="form-group">
+          <label for="loginEmail">Email Address</label>
+          <i class="fas fa-envelope form-icon"></i>
+          <input type="email" id="loginEmail" class="form-control" placeholder="Enter your email address">
+        </div>
+        
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <i class="fas fa-lock form-icon"></i>
+          <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password">
+          <a href="#" onclick="showPasswordReset()" style="display: block; text-align: right; font-size: 15px; margin-top: 5px; color:#005530;">Forgot password?</a>
+        </div>
+        
+        <button class="btn btn-primary" onclick="signIn()">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+          <div class="spinner" id="loginSpinner"></div>
+        </button>
+        
+        <div class="auth-footer">
+          Don't have an account? <a href="#" onclick="showTab('signup')">Sign up</a>
+        </div>
+      </div>
+
+      <!-- Signup Form -->
+      <div id="signup" class="auth-form">
+        <div class="form-group">
+          <label for="signupEmail">Email Address</label>
+          <i class="fas fa-envelope form-icon"></i>
+          <input type="email" id="signupEmail" class="form-control" placeholder="Enter your email address">
+        </div>
+        
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <i class="fas fa-lock form-icon"></i>
+          <input type="password" id="signupPassword" class="form-control" placeholder="Create a password (min 8 characters)" oninput="checkPasswordStrength()">
+          <div class="password-strength">
+            <div class="password-strength-fill" id="passwordStrength"></div>
+          </div>
+          <div id="passwordRules" style="font-size: 12px; color: var(--gray); margin-top: 5px;">
+            <i class="fas fa-info-circle"></i> Password must contain at least 8 characters, including uppercase, lowercase, and a number
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <i class="fas fa-lock form-icon"></i>
+          <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm your password">
+        </div>
+        
+        <button class="btn btn-primary" onclick="signUp()">
+          <i class="fas fa-user-plus"></i> Create Account
+          <div class="spinner" id="signupSpinner"></div>
+        </button>
+        
+        <div class="auth-footer">
+          Already have an account? <a href="#" onclick="showTab('login')">Sign in</a>
+        </div>
+      </div>
+
+      <div class="divider">OR</div>
+      
+      <button class="btn btn-anonymous" onclick="anonymousLogin()">
+        <i class="fas fa-user-secret"></i> Play as Guest
+      </button>
+
+      <!-- Password Reset Form -->
+      <div id="passwordResetForm" class="password-reset-form">
+        <h2>Reset Your Password</h2>
+        <div class="form-group">
+          <label for="resetPassword">New Password</label>
+          <i class="fas fa-lock form-icon"></i>
+          <input type="password" id="resetPassword" class="form-control" placeholder="Enter new password" oninput="checkResetPasswordStrength()">
+          <div class="password-strength">
+            <div class="password-strength-fill" id="resetPasswordStrength"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="resetConfirmPassword">Confirm Password</label>
+          <i class="fas fa-lock form-icon"></i>
+          <input type="password" id="resetConfirmPassword" class="form-control" placeholder="Confirm new password">
+        </div>
+        
+        <button class="btn btn-primary" onclick="handlePasswordReset()">
+          <i class="fas fa-sync-alt"></i> Reset Password
+          <div class="spinner" id="resetSpinner"></div>
+        </button>
+        
+        <div class="auth-footer">
+          Remember your password? <a href="#" onclick="showDefaultAuth()">Sign in</a>
+        </div>
+      </div>
+
+      <!-- Download App/Referral Registration Form -->
+      <div id="downloadAppForm" class="download-app-form">
+        <h2>Download The App Now</h2>
+        <p style="text-align: center; color: #005530; margin-bottom: 20px;">To Start your Earning journey with us</p>
+        
+        <div class="download-app-stats">
+          <div class="download-app-stat">
+            <div class="download-app-stat-value">4.8★</div>
+            <div class="download-app-stat-label">Rating</div>
+          </div>
+          <div class="download-app-stat">
+            <div class="download-app-stat-value">100K+</div>
+            <div class="download-app-stat-label">Downloads</div>
+          </div>
+          <div class="download-app-stat">
+            <div class="download-app-stat-value">18+</div>
+            <div class="download-app-stat-label">Age</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="downloadEmail">Email Address</label>
+          <i class="fas fa-envelope form-icon"></i>
+          <input type="email" id="downloadEmail" class="form-control" placeholder="Enter your email address">
+        </div>
+        
+        <div class="form-group">
+          <label for="downloadPassword">Password</label>
+          <i class="fas fa-lock form-icon"></i>
+          <input type="password" id="downloadPassword" class="form-control" placeholder="Create a password (min 8 characters)" oninput="checkDownloadPasswordStrength()">
+          <div class="password-strength">
+            <div class="password-strength-fill" id="downloadPasswordStrength"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="downloadConfirmPassword">Confirm Password</label>
+          <i class="fas fa-lock form-icon"></i>
+          <input type="password" id="downloadConfirmPassword" class="form-control" placeholder="Confirm your password">
+        </div>
+        
+        <div class="form-group">
+          <label for="referralCode">Referral Code (Optional)</label>
+          <i class="fas fa-user-plus form-icon"></i>
+          <input type="text" id="referralCode" class="form-control" placeholder="Enter referral code if any">
+        </div>
+        
+        <button class="btn btn-primary" onclick="registerAndDownload()">
+          <i class="fas fa-download"></i> Register & Download
+          <div class="spinner" id="downloadSpinner"></div>
+        </button>
+        
+        <div class="download-app-footer">
+          By registering, you agree to our <a href="https://kimi-win-registration-authiiiiuuu.github.io/Terms-conditions/">Terms of Service</a> and <a href="https://kimi-win-registration-authiiiiuuu.github.io/Terms-conditions/">Privacy Policy</a>
+        </div>
+      </div>
+
+      <!-- Verification Success -->
+      <div id="verificationSuccess" style="display: none; text-align: center; padding: 30px;">
+        <div style="width: 100px; height: 100px; background: #4CAF50; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px;">
+          <i class="fas fa-check" style="font-size: 40px; color: white;"></i>
+        </div>
+        <h2 style="color: #005530; margin-bottom: 10px;">Email Verified!</h2>
+        <p style="color: #005530; margin-bottom: 20px;">Your email has been successfully verified. You can now access your account.</p>
+        <button class="btn btn-primary" onclick="showDefaultAuth()">
+          <i class="fas fa-sign-in-alt"></i> Continue to Login
+        </button>
+      </div>
+
+      <!-- Download Success -->
+      <div id="downloadSuccess" style="display: none; text-align: center; padding: 30px;">
+        <div style="width: 100px; height: 100px; background: #4CAF50; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px;">
+          <i class="fas fa-check" style="font-size: 40px; color: white;"></i>
+        </div>
+        <h2 style="color: #005530; margin-bottom: 10px;">Registration Successful!</h2>
+        <p style="color: #005530; margin-bottom: 20px;">Your account has been created successfully. Click below to download the app.</p>
+        <a href="https://apk.e-droid.net/apk/app3601702-6qc1pr.apk?v=4" class="btn btn-primary" style="text-decoration: none;">
+          <i class="fas fa-download"></i> Download Now
+        </a>
+      </div>
+    </div>
+
+    <div id="userInfo">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <p class="user-email">Logged in as: <span id="userEmail"></span></p>
+    </div>
+  </div>
+
+  <!-- Verification Modal -->
+  <div class="verification-modal" id="verificationModal">
+    <div class="verification-container">
+      <div class="verification-icon">
+        <i class="fas fa-envelope"></i>
+      </div>
+      <h2 class="verification-title">Verify Your Email</h2>
+      <p class="verification-message" id="verificationMessage">
+        A verification link has been sent to your email address. Please check your inbox and click the link to verify your account before proceeding.
+      </p>
+      <div class="verification-buttons">
+        <button class="verification-button verification-primary" onclick="resendVerificationEmail()">
+          <i class="fas fa-sync-alt"></i> Resend Email
+        </button>
+        <button class="verification-button verification-secondary" onclick="checkEmailVerification()">
+          <i class="fas fa-check"></i> I've Verified
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Referral Code Popup -->
+  <div class="referral-popup" id="referralPopup">
+    <div class="referral-container">
+      <div class="referral-header">
+        <h3>Claim Your Bonus!</h3>
+        <p>Enter a referral code to get ₹25 bonus (optional)</p>
+      </div>
+      <div class="referral-form">
+        <input type="text" id="referralCodeInput" placeholder="Enter referral code (optional)" maxlength="10">
+      </div>
+      <div class="referral-buttons">
+        <button class="referral-submit" onclick="submitReferralCode()">Submit</button>
+        <button class="referral-skip" onclick="skipReferralCode()">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Success message</span>
+  </div>
+
+<script>
+    // 🔧 Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyD0Ne46PQqmvUnsq89GUJlKfLpWvsHmtbk",
+      authDomain: "kimi-win-90b82.firebaseapp.com",
+      databaseURL: "https://kimi-win-90b82-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "kimi-win-90b82",
+      storageBucket: "kimi-win-90b82.appspot.com",
+      messagingSenderId: "889222798634",
+      appId: "1:889222798634:web:86770b996003152f19d253"
+    };
+
+    const REDIRECT_URL = "go:home";
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // User-friendly error messages
+    const errorMessages = {
+      "auth/invalid-email": "Please enter a valid email address",
+      "auth/user-disabled": "This account has been disabled",
+      "auth/user-not-found": "No account found with this email",
+      "auth/wrong-password": "Incorrect password",
+      "auth/email-already-in-use": "This email is already registered",
+      "auth/operation-not-allowed": "This operation is not allowed",
+      "auth/weak-password": "Password is too weak (min 8 characters)",
+      "auth/too-many-requests": "Too many attempts. Please try again later",
+      "auth/network-request-failed": "Network error. Please check your connection",
+      "auth/expired-action-code": "The action code has expired. Please try again",
+      "auth/invalid-action-code": "Invalid action code. Please try again",
+      "default": "please enter a valid email address/password.or Please try again later"
+    };
+
+    // Current user waiting for verification
+    let unverifiedUser = null;
+    let currentMode = 'default'; // default, resetPassword, verifyEmail, referral
+
+    // Check URL parameters on page load
+    window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      // Check for password reset mode
+      if (urlParams.has('mode') && urlParams.get('mode') === 'resetPassword') {
+        showPasswordResetForm();
+        return;
+      }
+      
+      // Check for email verification mode
+      if (urlParams.has('mode') && urlParams.get('mode') === 'verifyEmail') {
+        handleEmailVerification();
+        return;
+      }
+      
+      // Check for referral mode
+      if (urlParams.has('ref')) {
+        showDownloadAppForm(urlParams.get('ref'));
+        return;
+      }
+      
+      // Default auth page
+      showDefaultAuth();
+    };
+
+    // Show default authentication page
+    function showDefaultAuth() {
+      currentMode = 'default';
+      document.getElementById('authTabs').style.display = 'flex';
+      document.getElementById('passwordResetForm').classList.remove('active');
+      document.getElementById('downloadAppForm').classList.remove('active');
+      document.getElementById('verificationSuccess').style.display = 'none';
+      document.getElementById('downloadSuccess').style.display = 'none';
+      
+      document.getElementById('pageTitle').textContent = 'Welcome Back!';
+      document.getElementById('pageSubtitle').textContent = 'Please Sign in to access your account';
+      
+      showTab('login');
+    }
+
+    // Show password reset form
+    function showPasswordResetForm() {
+      currentMode = 'resetPassword';
+      document.getElementById('authTabs').style.display = 'none';
+      document.getElementById('login').classList.remove('active');
+      document.getElementById('signup').classList.remove('active');
+      document.getElementById('passwordResetForm').classList.add('active');
+      document.getElementById('downloadAppForm').classList.remove('active');
+      document.getElementById('verificationSuccess').style.display = 'none';
+      document.getElementById('downloadSuccess').style.display = 'none';
+      
+      document.getElementById('pageTitle').textContent = 'Reset Your Password';
+      document.getElementById('pageSubtitle').textContent = 'Create a new password for your account';
+    }
+
+    // Show download app/referral form
+    function showDownloadAppForm(referralCode = '') {
+      currentMode = 'referral';
+      document.getElementById('authTabs').style.display = 'none';
+      document.getElementById('login').classList.remove('active');
+      document.getElementById('signup').classList.remove('active');
+      document.getElementById('passwordResetForm').classList.remove('active');
+      document.getElementById('downloadAppForm').classList.add('active');
+      document.getElementById('verificationSuccess').style.display = 'none';
+      document.getElementById('downloadSuccess').style.display = 'none';
+      
+      document.getElementById('pageTitle').textContent = 'Join Kimi-Win Today!';
+      document.getElementById('pageSubtitle').textContent = 'Register to start your earning journey';
+      
+      // Set referral code if provided in URL
+      if (referralCode) {
+        document.getElementById('referralCode').value = referralCode.toUpperCase();
+      }
+    }
+
+    // Handle email verification from URL
+    function handleEmailVerification() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const oobCode = urlParams.get('oobCode');
+      
+      if (!oobCode) {
+        showToast("Invalid verification link", "error");
+        showDefaultAuth();
+        return;
+      }
+      
+      // Apply the verification code
+      auth.applyActionCode(oobCode)
+        .then(() => {
+          // Email verified successfully
+          document.getElementById('authTabs').style.display = 'none';
+          document.getElementById('login').classList.remove('active');
+          document.getElementById('signup').classList.remove('active');
+          document.getElementById('passwordResetForm').classList.remove('active');
+          document.getElementById('downloadAppForm').classList.remove('active');
+          document.getElementById('verificationSuccess').style.display = 'block';
+          document.getElementById('downloadSuccess').style.display = 'none';
+          
+          document.getElementById('pageTitle').textContent = 'Email Verified!';
+          document.getElementById('pageSubtitle').textContent = 'Your email has been successfully verified';
+        })
+        .catch(error => {
+          showToast(getErrorMessage(error), 'error');
+          showDefaultAuth();
+        });
+    }
+
+    // Show verification modal
+    function showVerificationModal(email) {
+      document.getElementById('verificationMessage').textContent = 
+        `A verification link has been sent to ${email}. Please check your inbox and click the link to verify your account before proceeding.`;
+      document.getElementById('verificationModal').classList.add('active');
+    }
+
+    // Hide verification modal
+    function hideVerificationModal() {
+      document.getElementById('verificationModal').classList.remove('active');
+    }
+
+    // Resend verification email
+    function resendVerificationEmail() {
+      if (unverifiedUser) {
+        unverifiedUser.sendEmailVerification()
+          .then(() => {
+            showToast("Verification email resent successfully!", 'success');
+          })
+          .catch(error => {
+            showToast(getErrorMessage(error), 'error');
+          });
+      }
+    }
+
+    // Check if email is verified
+    function checkEmailVerification() {
+      if (unverifiedUser) {
+        unverifiedUser.reload()
+          .then(() => {
+            if (unverifiedUser.emailVerified) {
+              hideVerificationModal();
+              showToast("Email verified successfully!", 'success');
+              processVerifiedUser(unverifiedUser);
+            } else {
+              showToast("Email not verified yet. Please check your inbox.", 'warning');
+            }
+          })
+          .catch(error => {
+            showToast(getErrorMessage(error), 'error');
+          });
+      }
+    }
+
+    // Process verified user
+    function processVerifiedUser(user) {
+      saveToLocalStorage(user, "email/password");
+      ensureUserExists(user)
+        .then(() => {
+          showToast(`Welcome ${user.email}!`, 'success');
+          showReferralPopup(user.uid);
+        })
+        .catch(error => {
+          showToast("Error setting up your account. Please try again.", 'error');
+          console.error("Error ensuring user exists:", error);
+        });
+    }
+
+    // ✅ Securely generate a random 10-character referral code
+    function generateReferralCode(length = 10) {
+      const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      const values = new Uint32Array(length);
+      window.crypto.getRandomValues(values);
+      for (let i = 0; i < length; i++) {
+        result += charset[values[i] % charset.length];
+      }
+      return result;
+    }
+
+    // ✅ Generate unique referral code by checking existing ones
+    async function generateUniqueReferralCode(retries = 5) {
+      for (let i = 0; i < retries; i++) {
+        const code = generateReferralCode();
+        const snapshot = await database.ref("referralCodes/" + code).once("value");
+        if (!snapshot.exists()) {
+          return code;
+        }
+      }
+      throw new Error("Failed to generate unique referral code after multiple attempts.");
+    }
+
+    // ✅ Create user data in Realtime Database with unique referral code
+    async function createUserData(user) {
+      const userId = user.uid;
+      const email = user.email || "Guest Account";
+      const referralCode = await generateUniqueReferralCode();
+      const timestamp = firebase.database.ServerValue.TIMESTAMP;
+
+      const userData = {
+        email: email,
+        referralCode: referralCode,
+        BankDetails: {
+          accountNumber: "",
+          accountName: "",
+          bankName: "",
+          ifscCode: ""
+        },
+        totalBalance: 0,
+        withdrawableBalance: 0,
+        history: {},
+        depositHistory: {},
+        withdrawalHistory: {},
+        Referrals: {},
+        referralEarnings: 0,
+        notifications: {},
+        createdAt: timestamp,
+        lastLogin: timestamp,
+        hasUsedReferral: false,
+        emailVerified: user.emailVerified || false
+      };
+
+      // Save user and referralCode reference
+      await Promise.all([
+        database.ref('appusers/' + userId).set(userData),
+        database.ref('referralCodes/' + referralCode).set(userId)
+      ]);
+
+      console.log("User data created successfully with unique referral code");
+      return userData;
+    }
+
+    // Update last login timestamp
+    function updateLastLogin(userId) {
+      return database.ref('appusers/' + userId + '/lastLogin').set(firebase.database.ServerValue.TIMESTAMP);
+    }
+
+    // Check if user exists in database, if not create
+    function ensureUserExists(user) {
+      return database.ref('appusers/' + user.uid).once('value')
+        .then(snapshot => {
+          if (!snapshot.exists()) {
+            return createUserData(user);
+          } else {
+            return updateLastLogin(user.uid);
+          }
+        });
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      const toastIcon = toast.querySelector('i');
+
+      toast.className = `toast ${type}`;
+      toastMessage.textContent = message;
+
+      if (type === 'success') {
+        toastIcon.className = 'fas fa-check-circle';
+      } else if (type === 'error') {
+        toastIcon.className = 'fas fa-exclamation-circle';
+      } else if (type === 'warning') {
+        toastIcon.className = 'fas fa-exclamation-triangle';
+      }
+
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Get user-friendly error message
+    function getErrorMessage(error) {
+      const code = error.code || error.message;
+      return errorMessages[code] || errorMessages.default;
+    }
+
+    // Tab switching
+    function showTab(tabId) {
+      document.querySelectorAll('.auth-form').forEach(form => {
+        form.classList.remove('active');
+      });
+      document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.auth-tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+    }
+
+    // Save to localStorage
+    function saveToLocalStorage(user, method) {
+      localStorage.setItem("uid", user.uid);
+      localStorage.setItem("email", user.email || "Guest Account");
+      localStorage.setItem("login_method", method);
+    }
+
+    // Check password strength
+    function checkPasswordStrength() {
+      const password = document.getElementById('signupPassword').value;
+      const strengthBar = document.getElementById('passwordStrength');
+      
+      // Reset
+      strengthBar.style.width = '0%';
+      strengthBar.style.backgroundColor = '#e74c3c';
+      
+      if (password.length === 0) return;
+      
+      // Check strength
+      let strength = 0;
+      
+      // Length
+      if (password.length >= 8) strength += 25;
+      if (password.length >= 12) strength += 15;
+      
+      // Contains numbers
+      if (/\d/.test(password)) strength += 20;
+      
+      // Contains lowercase
+      if (/[a-z]/.test(password)) strength += 15;
+      
+      // Contains uppercase
+      if (/[A-Z]/.test(password)) strength += 15;
+      
+      // Contains special chars
+      if (/[^A-Za-z0-9]/.test(password)) strength += 10;
+      
+      // Update UI
+      strength = Math.min(strength, 100);
+      strengthBar.style.width = strength + '%';
+      
+      // Color based on strength
+      if (strength < 40) {
+        strengthBar.style.backgroundColor = '#e74c3c'; // Red
+      } else if (strength < 70) {
+        strengthBar.style.backgroundColor = '#f39c12'; // Orange
+      } else {
+        strengthBar.style.backgroundColor = '#2ecc71'; // Green
+      }
+    }
+
+    // Check reset password strength
+    function checkResetPasswordStrength() {
+      const password = document.getElementById('resetPassword').value;
+      const strengthBar = document.getElementById('resetPasswordStrength');
+      
+      // Same logic as checkPasswordStrength but for reset password field
+      strengthBar.style.width = '0%';
+      strengthBar.style.backgroundColor = '#e74c3c';
+      
+      if (password.length === 0) return;
+      
+      let strength = 0;
+      if (password.length >= 8) strength += 25;
+      if (password.length >= 12) strength += 15;
+      if (/\d/.test(password)) strength += 20;
+      if (/[a-z]/.test(password)) strength += 15;
+      if (/[A-Z]/.test(password)) strength += 15;
+      if (/[^A-Za-z0-9]/.test(password)) strength += 10;
+      
+      strength = Math.min(strength, 100);
+      strengthBar.style.width = strength + '%';
+      
+      if (strength < 40) {
+        strengthBar.style.backgroundColor = '#e74c3c';
+      } else if (strength < 70) {
+        strengthBar.style.backgroundColor = '#f39c12';
+      } else {
+        strengthBar.style.backgroundColor = '#2ecc71';
+      }
+    }
+
+    // Check download password strength
+    function checkDownloadPasswordStrength() {
+      const password = document.getElementById('downloadPassword').value;
+      const strengthBar = document.getElementById('downloadPasswordStrength');
+      
+      // Same logic as checkPasswordStrength but for download password field
+      strengthBar.style.width = '0%';
+      strengthBar.style.backgroundColor = '#e74c3c';
+      
+      if (password.length === 0) return;
+      
+      let strength = 0;
+      if (password.length >= 8) strength += 25;
+      if (password.length >= 12) strength += 15;
+      if (/\d/.test(password)) strength += 20;
+      if (/[a-z]/.test(password)) strength += 15;
+      if (/[A-Z]/.test(password)) strength += 15;
+      if (/[^A-Za-z0-9]/.test(password)) strength += 10;
+      
+      strength = Math.min(strength, 100);
+      strengthBar.style.width = strength + '%';
+      
+      if (strength < 40) {
+        strengthBar.style.backgroundColor = '#e74c3c';
+      } else if (strength < 70) {
+        strengthBar.style.backgroundColor = '#f39c12';
+      } else {
+        strengthBar.style.backgroundColor = '#2ecc71';
+      }
+    }
+
+    // Validate email
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    // Validate password
+    function validatePassword(password) {
+      // At least 8 characters, one uppercase, one lowercase, one number
+      const re = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+      return re.test(password);
+    }
+
+    // Show password reset form
+    function showPasswordReset() {
+      document.getElementById('passwordResetModal').style.display = 'block';
+    }
+
+    // Hide password reset form
+    function hidePasswordReset() {
+      document.getElementById('passwordResetModal').style.display = 'none';
+    }
+
+    // Send password reset email
+    function sendPasswordReset() {
+      const email = document.getElementById('resetEmail').value;
+      
+      if (!validateEmail(email)) {
+        showToast("Please enter a valid email address", 'error');
+        return;
+      }
+      
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          showToast("Password reset link sent to your email", 'success');
+          hidePasswordReset();
+        })
+        .catch(error => {
+          showToast(getErrorMessage(error), 'error');
+        });
+    }
+
+    // Handle password reset from URL
+    function handlePasswordReset() {
+      const password = document.getElementById('resetPassword').value;
+      const confirmPassword = document.getElementById('resetConfirmPassword').value;
+      
+      if (!password || !confirmPassword) {
+        showToast("Please fill in all fields", 'error');
+        return;
+      }
+      
+      if (!validatePassword(password)) {
+        showToast("Password must be at least 8 characters with uppercase, lowercase and a number", 'error');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        showToast("Passwords don't match!", 'error');
+        return;
+      }
+      
+      // Show loading spinner
+      document.getElementById('resetSpinner').style.display = 'block';
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const oobCode = urlParams.get('oobCode');
+      
+      if (!oobCode) {
+        showToast("Invalid password reset link", 'error');
+        document.getElementById('resetSpinner').style.display = 'none';
+        return;
+      }
+      
+      // Verify the password reset code
+      auth.verifyPasswordResetCode(oobCode)
+        .then(email => {
+          // Save email to localStorage for confirmation
+          localStorage.setItem('emailForPasswordReset', email);
+          
+          // Confirm the password reset
+          return auth.confirmPasswordReset(oobCode, password);
+        })
+        .then(() => {
+          showToast("Password reset successfully!", 'success');
+          document.getElementById('resetSpinner').style.display = 'none';
+          
+          // Show success message and redirect to login
+          setTimeout(() => {
+            window.location.href = window.location.pathname; // Remove query params
+          }, 2000);
+        })
+        .catch(error => {
+          document.getElementById('resetSpinner').style.display = 'none';
+          showToast(getErrorMessage(error), 'error');
+        });
+    }
+
+    // Show referral popup
+    function showReferralPopup(userId) {
+      // Check if user has already used a referral code
+      database.ref('appusers/' + userId + '/hasUsedReferral').once('value')
+        .then(snapshot => {
+          const hasUsedReferral = snapshot.val();
+          
+          if (!hasUsedReferral) {
+            document.getElementById('referralPopup').classList.add('active');
+          } else {
+            // Redirect immediately if already used referral
+            window.location.href = REDIRECT_URL;
+          }
+        })
+        .catch(error => {
+          console.error("Error checking referral status:", error);
+          // Redirect if there's an error checking
+          window.location.href = REDIRECT_URL;
+        });
+    }
+
+    // Submit referral code
+    function submitReferralCode() {
+      const referralCode = document.getElementById('referralCodeInput').value.trim();
+      const userId = localStorage.getItem('uid');
+      
+      if (!referralCode) {
+        skipReferralCode();
+        return;
+      }
+      
+      if (referralCode.length !== 10 || !/^[A-Z0-9]+$/.test(referralCode)) {
+        showToast("Please enter a valid 10-digit referral code", 'error');
+        return;
+      }
+      
+      // Check if referral code exists
+      database.ref('referralCodes/' + referralCode).once('value')
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const refereeId = snapshot.val();
+            
+            if (refereeId === userId) {
+              showToast("You cannot use your own referral code", 'error');
+              return;
+            }
+            
+            // Process the referral
+            const timestamp = Date.now();
+            const updates = {};
+            
+            updates[`appusers/${userId}/hasUsedReferral`] = true;
+            updates[`appusers/${userId}/referredVia`] = referralCode;
+            updates[`appusers/${userId}/withdrawableBalance`] = 25;
+            updates[`appusers/${userId}/totalBalance`] = 25;
+            updates[`appusers/${userId}/history/ref_used_${timestamp}`] = {
+              type: 'referral_used',
+              code: referralCode,
+              amount: 25,
+              timestamp: timestamp
+            };
+            
+            // Add bonus to referee
+            updates[`appusers/${refereeId}/referralEarnings`] = firebase.database.ServerValue.increment(25);
+            updates[`appusers/${refereeId}/withdrawableBalance`] = firebase.database.ServerValue.increment(25);
+            updates[`appusers/${refereeId}/totalBalance`] = firebase.database.ServerValue.increment(25);
+            updates[`appusers/${refereeId}/Referrals/${userId}`] = {
+              email: localStorage.getItem('email') || "Guest Account",
+              timestamp: timestamp,
+              status: 'active',
+              earned: 25
+            };
+            updates[`appusers/${refereeId}/history/ref_earned_${timestamp}`] = {
+              type: 'referral_earned',
+              from: userId,
+              amount: 25,
+              timestamp: timestamp
+            };
+            
+            return database.ref().update(updates);
+          } else {
+            showToast("Invalid referral code", 'error');
+            return Promise.reject("Invalid referral code");
+          }
+        })
+        .then(() => {
+          showToast("Referral code applied successfully! ₹25 added to your balance", 'success');
+          document.getElementById('referralPopup').classList.remove('active');
+          setTimeout(() => {
+            window.location.href = REDIRECT_URL;
+          }, 1500);
+        })
+        .catch(error => {
+          console.error("Error processing referral:", error);
+          showToast("Error processing referral code", 'error');
+        });
+    }
+
+    // Skip referral code
+    function skipReferralCode() {
+      const userId = localStorage.getItem('uid');
+      
+      // Mark as skipped
+      database.ref('appusers/' + userId + '/hasUsedReferral').set(false)
+        .then(() => {
+          document.getElementById('referralPopup').classList.remove('active');
+          window.location.href = REDIRECT_URL;
+        })
+        .catch(error => {
+          console.error("Error skipping referral:", error);
+          window.location.href = REDIRECT_URL;
+        });
+    }
+
+    // Redirect after login
+    function redirectAfterLogin(user, method) {
+      saveToLocalStorage(user, method);
+
+      // Show loading spinner
+      const spinnerId = method === 'email/password' ? 'loginSpinner' : 'signupSpinner';
+      document.getElementById(spinnerId).style.display = 'block';
+      
+      ensureUserExists(user)
+        .then(() => {
+          showToast(`Welcome ${user.email || 'Dear Guest'}!`, 'success');
+          
+          // For email/password login, check verification status
+          if (method === 'email/password') {
+            if (user.emailVerified) {
+              // Show referral popup for verified users
+              showReferralPopup(user.uid);
+            } else {
+              // Show verification modal for unverified users
+              unverifiedUser = user;
+              showVerificationModal(user.email);
+              document.getElementById(spinnerId).style.display = 'none';
+              return; // Don't proceed further until verified
+            }
+          } else {
+            // For other methods, proceed directly
+            showReferralPopup(user.uid);
+          }
+        })
+        .catch(error => {
+          showToast("Error setting up your account. Please try again.", 'error');
+          console.error("Error ensuring user exists:", error);
+          document.getElementById(spinnerId).style.display = 'none';
+        });
+    }
+
+    // Register and download app (from referral page)
+    function registerAndDownload() {
+      const email = document.getElementById('downloadEmail').value;
+      const password = document.getElementById('downloadPassword').value;
+      const confirmPassword = document.getElementById('downloadConfirmPassword').value;
+      const referralCode = document.getElementById('referralCode').value.trim().toUpperCase();
+      
+      // Input validation
+      if (!email || !password || !confirmPassword) {
+        showToast("Please fill in all required fields", 'error');
+        return;
+      }
+      
+      if (!validateEmail(email)) {
+        showToast("Please enter a valid email address", 'error');
+        return;
+      }
+      
+      if (!validatePassword(password)) {
+        showToast("Password must be at least 8 characters with uppercase, lowercase and a number", 'error');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        showToast("Passwords don't match!", 'error');
+        return;
+      }
+      
+      // Show loading spinner
+      document.getElementById('downloadSpinner').style.display = 'block';
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(result => {
+          // Send verification email
+          return result.user.sendEmailVerification()
+            .then(() => {
+              // Prepare user data
+              const userData = {
+                email: email,
+                referralCodeUsed: referralCode || null,
+                emailVerified: false,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+              };
+              
+              // Save user data to database
+              return database.ref('appusers/' + result.user.uid).set(userData)
+                .then(() => {
+                  // Process referral if exists
+                  if (referralCode) {
+                    return processReferral(result.user.uid, referralCode);
+                  }
+                  return Promise.resolve();
+                });
+            });
+        })
+        .then(() => {
+          document.getElementById('downloadSpinner').style.display = 'none';
+          
+          // Show download success
+          document.getElementById('downloadAppForm').classList.remove('active');
+          document.getElementById('downloadSuccess').style.display = 'block';
+          
+          showToast("Registration successful! Please verify your email.", 'success');
+        })
+        .catch(error => {
+          document.getElementById('downloadSpinner').style.display = 'none';
+          showToast(getErrorMessage(error), 'error');
+        });
+    }
+
+    // Process referral code for download app registration
+    function processReferral(userId, referralCode) {
+      return database.ref('referralCodes/' + referralCode).once('value')
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const referrerId = snapshot.val();
+            
+            // Update both users' data
+            const updates = {};
+            
+            // For the new user (referee)
+            updates[`appusers/${userId}/referredBy`] = referrerId;
+            updates[`appusers/${userId}/withdrawableBalance`] = 25;
+            updates[`appusers/${userId}/totalBalance`] = 25;
+            
+            // For the referrer
+            updates[`appusers/${referrerId}/referralEarnings`] = firebase.database.ServerValue.increment(25);
+            updates[`appusers/${referrerId}/withdrawableBalance`] = firebase.database.ServerValue.increment(25);
+            updates[`appusers/${referrerId}/totalBalance`] = firebase.database.ServerValue.increment(25);
+            updates[`appusers/${referrerId}/Referrals/${userId}`] = {
+              email: document.getElementById('downloadEmail').value,
+              timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            return database.ref().update(updates);
+          }
+          return Promise.resolve();
+        });
+    }
+
+    // Auth state listener
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // Check if user is coming from login/signup (no localStorage yet)
+        if (!localStorage.getItem('uid')) {
+          redirectAfterLogin(user, "existing_session");
+        }
+      } else {
+        document.querySelector(".auth-body").style.display = "block";
+        document.getElementById("userInfo").style.display = "none";
+      }
+    });
+
+    // Email/Password Sign Up
+    function signUp() {
+      const email = document.getElementById("signupEmail").value;
+      const password = document.getElementById("signupPassword").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      
+      // Input validation
+      if (!email || !password || !confirmPassword) {
+        showToast("Please fill in all fields", 'error');
+        return;
+      }
+      
+      if (!validateEmail(email)) {
+        showToast("Please enter a valid email address", 'error');
+        return;
+      }
+      
+      if (!validatePassword(password)) {
+        showToast("Password must be at least 8 characters with uppercase, lowercase and a number", 'error');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        showToast("Passwords don't match!", 'error');
+        return;
+      }
+      
+      // Show loading spinner
+      document.getElementById('signupSpinner').style.display = 'block';
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(result => {
+          // Send verification email
+          return result.user.sendEmailVerification()
+            .then(() => {
+              // Store the unverified user
+              unverifiedUser = result.user;
+              showVerificationModal(email);
+              document.getElementById('signupSpinner').style.display = 'none';
+            });
+        })
+        .catch(error => {
+          document.getElementById('signupSpinner').style.display = 'none';
+          showToast(getErrorMessage(error), 'error');
+        });
+    }
+
+    // Email/Password Sign In
+    function signIn() {
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+      
+      // Input validation
+      if (!email || !password) {
+        showToast("Please fill in all fields", 'error');
+        return;
+      }
+      
+      if (!validateEmail(email)) {
+        showToast("Please enter a valid email address", 'error');
+        return;
+      }
+      
+      // Show loading spinner
+      document.getElementById('loginSpinner').style.display = 'block';
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then(result => {
+          if (!result.user.emailVerified) {
+            // User is not verified, show verification modal
+            unverifiedUser = result.user;
+            showVerificationModal(email);
+            document.getElementById('loginSpinner').style.display = 'none';
+          } else {
+            // User is verified, proceed normally
+            redirectAfterLogin(result.user, "email/password");
+          }
+        })
+        .catch(error => {
+          document.getElementById('loginSpinner').style.display = 'none';
+          showToast(getErrorMessage(error), 'error');
+        });
+    }
+
+    // Anonymous Login
+    function anonymousLogin() {
+      auth.signInAnonymously()
+        .then(result => redirectAfterLogin(result.user, "Guest Account"))
+        .catch(error => showToast(getErrorMessage(error), 'error'));
+    }
+
+    // Google Login
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => redirectAfterLogin(result.user, "google"))
+        .catch(error => showToast(getErrorMessage(error), 'error'));
+    }
+
+    // Check if user is already logged in
+    if (localStorage.getItem('uid')) {
+      window.location.href = REDIRECT_URL;
+    }
+</script>
+</body>
+</html>
